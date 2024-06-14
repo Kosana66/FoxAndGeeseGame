@@ -21,7 +21,7 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
 
     int numRows = 8;
     int numColumns = 8;
-    TextView tvTurn;
+    private TextView tvTurn;
 
     HashMap<String, ImageView> images;
 
@@ -29,8 +29,8 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
         return this.br;
     }
 
-    public TextView getTvTurn() {
-        return tvTurn;
+    public void setTvTurn(String turn) {
+        this.tvTurn.setText(turn);
     }
 
     @Override
@@ -42,6 +42,7 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
         images = new HashMap<String, ImageView>();
         LinearLayout llmain = findViewById(R.id.lvmain);
         tvTurn = findViewById(R.id.tvTurn);
+        tvTurn.setText("Fox turn");
 
         Random random = new Random();
         int[] evenColumns = {1, 3, 5, 7};

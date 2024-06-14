@@ -82,7 +82,7 @@ public class ReceiveMessageFromServer implements Runnable {
                     });
                 }
             } catch (IOException ex) {
-                Toast.makeText(parent, "I can't to receive messageko!", Toast.LENGTH_LONG).show();
+                Toast.makeText(parent, "I can't to receive message!", Toast.LENGTH_LONG).show();
             }
         }
     }
