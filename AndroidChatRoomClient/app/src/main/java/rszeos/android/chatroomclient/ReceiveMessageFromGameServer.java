@@ -34,6 +34,7 @@ public class ReceiveMessageFromGameServer implements Runnable {
             String line;
             try {
                 line = this.br.readLine();
+                System.out.println(line);
                 if(line.startsWith("Not your turn")) {
                     parent.runOnUiThread(new Runnable() {
                         @Override
@@ -50,6 +51,15 @@ public class ReceiveMessageFromGameServer implements Runnable {
                         }
                     });
                 }
+                if(line.startsWith("Fox is selected") || line.startsWith("Forbidden") ||
+                        line.startsWith("Movement") || line.startsWith("Goose is selected")) {
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(parent, line, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
                 if(line.startsWith("Selected:fox:")) {
                     String row = line.split(":")[2].split(",")[0];
                     String col = line.split(":")[2].split(",")[1];
@@ -59,7 +69,6 @@ public class ReceiveMessageFromGameServer implements Runnable {
                         public void run() {
                             images.get(row + "," + col).setImageDrawable(null);
                             images.get(row + "," + col).setImageResource(R.drawable.clicked_fox);
-                            parent.setTvTurn("Geese turn");
                         }
                     });
                 }
@@ -74,6 +83,14 @@ public class ReceiveMessageFromGameServer implements Runnable {
                         public void run() {
                             images.get(selRow + "," + selCol).setImageDrawable(null);
                             images.get(row + "," + col).setImageResource(R.drawable.fox);
+                            parent.setTvTurn("Geese turn");
+                        }
+                    });
+                }
+                if(line.startsWith("fox")) {
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
                             parent.setTvTurn("Fox turn");
                         }
                     });
@@ -99,6 +116,15 @@ public class ReceiveMessageFromGameServer implements Runnable {
                         public void run() {
                             images.get(selRow + "," + selCol).setImageDrawable(null);
                             images.get(row + "," + col).setImageResource(R.drawable.goose);
+                            parent.setTvTurn("Fox turn");
+                        }
+                    });
+                }
+                if(line.startsWith("geese")) {
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            parent.setTvTurn("Geese turn");
                         }
                     });
                 }
@@ -106,7 +132,7 @@ public class ReceiveMessageFromGameServer implements Runnable {
                     parent.runOnUiThread(() -> {
                         AlertDialog.Builder builder = new AlertDialog.Builder(parent);
                         builder.setTitle("RESTART REQUEST")
-                                .setMessage("Would you like to play again with the same player?")
+                                .setMessage("FOX IS WINNER! Would you like to play again with the same player?")
                                 .setCancelable(false)
                                 .setPositiveButton("YES", (dialog, which) -> {
                                     parent.sendMessage("Accepted restart");
@@ -123,7 +149,7 @@ public class ReceiveMessageFromGameServer implements Runnable {
                     parent.runOnUiThread(() -> {
                         AlertDialog.Builder builder = new AlertDialog.Builder(parent);
                         builder.setTitle("RESTART REQUEST")
-                                .setMessage("Would you like to play again with the same player?")
+                                .setMessage("GEESE ARE WINNER! Would you like to play again with the same player?")
                                 .setCancelable(false)
                                 .setPositiveButton("YES", (dialog, which) -> {
                                     parent.sendMessage("Accepted restart");
@@ -140,7 +166,7 @@ public class ReceiveMessageFromGameServer implements Runnable {
                     parent.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            new Handler().postDelayed(parent::recreate, 2000);
+                            parent.restartGame();
                         }
                     });
                 }

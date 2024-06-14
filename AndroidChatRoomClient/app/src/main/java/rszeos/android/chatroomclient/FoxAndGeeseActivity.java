@@ -22,7 +22,7 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
     int numRows = 8;
     int numColumns = 8;
     private TextView tvTurn;
-
+    private static long fixedSeed = 123456;
     HashMap<String, ImageView> images;
 
     public BufferedReader getBr() {
@@ -45,7 +45,7 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
         LinearLayout llmain = findViewById(R.id.lvmain);
         tvTurn = findViewById(R.id.tvTurn);
         tvTurn.setText("Fox turn");
-        Random random = new Random();
+        Random random = new Random(fixedSeed);
         int[] evenColumns = {1, 3, 5, 7};
         int foxCol =  evenColumns[random.nextInt(evenColumns.length)];
 
@@ -106,5 +106,50 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
                 System.out.println("FoxAndGeeseActivity: Sending: " + message);
             }
         }).start();
+    }
+    public void restartGame() {
+        setContentView(R.layout.activity_foxandgeese);
+
+        images = new HashMap<String, ImageView>();
+        LinearLayout llmain = findViewById(R.id.lvmain);
+        tvTurn = findViewById(R.id.tvTurn);
+        tvTurn.setText("Fox turn");
+        Random random = new Random(fixedSeed);
+        int[] evenColumns = {1, 3, 5, 7};
+        int foxCol =  evenColumns[random.nextInt(evenColumns.length)];
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        for (int row = 1; row <= numRows; row++) {
+            LinearLayout llrow = new LinearLayout(this);
+            llrow.setOrientation(LinearLayout.HORIZONTAL);
+            for (int col = 1; col <= numColumns; col++) {
+                ImageView iv = new ImageView(this);
+                iv.setTag(row + "," + col);
+
+                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(0,140);
+                layoutParams.height = displayMetrics.widthPixels / numColumns;
+                layoutParams.weight = 1;
+                iv.setLayoutParams(layoutParams);
+
+                if( (row + col) % 2 == 0)
+                    iv.setBackgroundColor(Color.rgb(0x96, 0x4b, 0x00));
+                else
+                    iv.setBackgroundColor(Color.rgb(0xf3, 0xdc, 0xa2));
+
+                if(row == numRows && col == foxCol)
+                    iv.setImageResource(R.drawable.fox);
+                if(row == 1 && col % 2 == 0)
+                    iv.setImageResource(R.drawable.goose);
+
+                images.put(row + "," + col, iv);
+
+                iv.setOnClickListener((v)-> sendMessage("Clicked:" + v.getTag().toString()));
+                llrow.addView(iv);
+            }
+            llmain.addView(llrow);
+        }
+        sendMessage("Initial fox column:" + foxCol);
     }
 }

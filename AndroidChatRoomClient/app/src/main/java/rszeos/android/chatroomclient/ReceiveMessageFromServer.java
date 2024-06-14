@@ -32,6 +32,7 @@ public class ReceiveMessageFromServer implements Runnable {
             String line;
             try {
                 line = this.br.readLine();
+
                 System.out.println(line);
                 if (line.startsWith("Players:")) {
                     String[] currentPlayers = line.split(":")[1].trim().split(" ");

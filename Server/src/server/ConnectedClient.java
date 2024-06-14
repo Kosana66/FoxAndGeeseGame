@@ -29,13 +29,12 @@ public class ConnectedClient implements Runnable {
     private String foxPlayer;
     private String geesePlayer;
     
-    private int currentGeeseRow;
-    private int currentGeeseCol;
     private int currentFoxRow;
     private int currentFoxCol;
     private int selItem;
     private int selRow = 0;
     private int selCol = 0;
+    private int numOfAgainGame;
     
     private boolean playAgain;
     
@@ -55,6 +54,7 @@ public class ConnectedClient implements Runnable {
             this.geesePlayer = "";
             this.playAgain = false;
             this.selItem = 0;
+            this.numOfAgainGame = 0;
         } catch (IOException ex) {
             Logger.getLogger(ConnectedClient.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -66,6 +66,7 @@ public class ConnectedClient implements Runnable {
     
     public void printMatrix()
     {
+        System.out.println("***************************************");
         for (int i = 1; i <= 8; i++)
         {
             for (int j = 1; j <= 8; j++)
@@ -74,6 +75,7 @@ public class ConnectedClient implements Runnable {
             }
             System.out.println();
         }
+        System.out.println("***************************************");
     }
     
     private void updateStatus() {
@@ -110,7 +112,6 @@ public class ConnectedClient implements Runnable {
                 }
                 else {
                     String line = this.br.readLine();
-                    System.out.println(line);
                     if (line != null) {
                         //Challenge:challenger:userToChallenge
                         if(line.startsWith("Challenge:")) {
@@ -184,9 +185,9 @@ public class ConnectedClient implements Runnable {
                                         this.matrix.put(row + "," + col, 4);
                                     
                                     if(row == 1 && col % 2 == 0) 
-                                        this.matrix.put(row + "," + col, 1);
-                                    else if(row == 8 && col == initialFoxCol) {
                                         this.matrix.put(row + "," + col, 2);
+                                    else if(row == 8 && col == initialFoxCol) {
+                                        this.matrix.put(row + "," + col, 1);
                                         for(ConnectedClient clnt : this.allClients) {
                                             if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) {
                                                 clnt.currentFoxRow = row;
@@ -237,8 +238,10 @@ public class ConnectedClient implements Runnable {
                                                     else
                                                         clnt.matrix.put(selRow + "," + selCol, 4);
                                                 }
-                                                if(clnt.username.equals(this.geesePlayer))
+                                                if(clnt.username.equals(this.geesePlayer)) {
                                                     clnt.myTurn = true;
+                                                    clnt.pw.println("geese");
+                                                }
                                             }
                                             this.myTurn = false;
                                             this.selRow = 0;
@@ -246,8 +249,8 @@ public class ConnectedClient implements Runnable {
                                             selItem = 0;
                                             if(isFoxWinner()) {
                                                 for(ConnectedClient clnt : this.allClients) {
-                                                if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer))
-                                                    clnt.pw.println("Fox is winner");
+                                                    if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer))
+                                                        clnt.pw.println("Fox is winner");
                                                 }
                                             }
                                         }
@@ -263,8 +266,10 @@ public class ConnectedClient implements Runnable {
                                                     else
                                                         clnt.matrix.put(selRow + "," + selCol, 4);
                                                 }
-                                                if(clnt.username.equals(this.foxPlayer))
+                                                if(clnt.username.equals(this.foxPlayer)) {
                                                     clnt.myTurn = true;
+                                                    clnt.pw.println("fox");
+                                                }
                                             }
                                             this.myTurn = false;
                                             this.selRow = 0;
@@ -288,6 +293,7 @@ public class ConnectedClient implements Runnable {
                             for(ConnectedClient clnt : this.allClients) {
                                 if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) {
                                     clnt.available = true;
+                                    clnt.numOfAgainGame = 0;
                                     clnt.pw.println("Terminate");
                                 }
                             }
@@ -302,29 +308,55 @@ public class ConnectedClient implements Runnable {
 
                             if(i == 2) {
                                 for(ConnectedClient clnt : this.allClients) {
-                                    clnt.selItem = 0;
-                                    clnt.selRow = 0;
-                                    clnt.selCol = 0;
-                                    if(clnt.iAmFox) {
+                                    if(clnt.username.equals(this.foxPlayer) && clnt.numOfAgainGame % 2 == 0) {
+                                        clnt.selItem = 0;
+                                        clnt.selRow = 0;
+                                        clnt.selCol = 0;
                                         clnt.available = false;
                                         clnt.iAmFox = false;
                                         clnt.iAmGeese = true;
                                         clnt.myTurn = false;
                                         clnt.playAgain = false;
+                                        clnt.numOfAgainGame++;
+                                        clnt.pw.println("Restart");
                                     }
-                                    else if(clnt.iAmGeese) {
+                                    else if(clnt.username.equals(this.geesePlayer) && clnt.numOfAgainGame % 2 == 1) {
+                                        clnt.selItem = 0;
+                                        clnt.selRow = 0;
+                                        clnt.selCol = 0;
                                         clnt.available = false;
                                         clnt.iAmFox = true;
                                         clnt.iAmGeese = false;
                                         clnt.myTurn = true;
                                         clnt.playAgain = false;
+                                        clnt.numOfAgainGame++;
+                                        clnt.pw.println("Restart");
+                                    }
+                                    if(clnt.username.equals(this.geesePlayer) && clnt.numOfAgainGame % 2 == 0) {
+                                        clnt.selItem = 0;
+                                        clnt.selRow = 0;
+                                        clnt.selCol = 0;
+                                        clnt.available = false;
+                                        clnt.iAmFox = false;
+                                        clnt.iAmGeese = true;
+                                        clnt.myTurn = false;
+                                        clnt.playAgain = false;
+                                        clnt.numOfAgainGame++;
+                                        clnt.pw.println("Restart");
+                                    }
+                                    else if(clnt.username.equals(this.foxPlayer) && clnt.numOfAgainGame % 2 == 1) {
+                                        clnt.selItem = 0;
+                                        clnt.selRow = 0;
+                                        clnt.selCol = 0;
+                                        clnt.available = false;
+                                        clnt.iAmFox = true;
+                                        clnt.iAmGeese = false;
+                                        clnt.myTurn = true;
+                                        clnt.playAgain = false;
+                                        clnt.numOfAgainGame++;
+                                        clnt.pw.println("Restart");
                                     }
                                 }
-
-                                for(ConnectedClient clnt : this.allClients) {
-                                    if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) 
-                                        clnt.pw.println("Restart");
-                                } 
                             }
                         }
                         
@@ -411,11 +443,11 @@ public class ConnectedClient implements Runnable {
                 Math.abs(cCol - sCol) == 1;      // da li je susedno polje po koloni
     }
     
-    public boolean areGeeseWinner() {
+    public boolean isFoxWinner() {
         return currentFoxRow == 1;
     }
     
-    public boolean isFoxWinner() {
+    public boolean areGeeseWinner() {
         int[][] neighborhood = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
         boolean isTrapped = true;
         for (int[] neighbor : neighborhood) {
