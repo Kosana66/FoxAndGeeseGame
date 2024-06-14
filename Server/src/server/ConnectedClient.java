@@ -33,6 +33,9 @@ public class ConnectedClient implements Runnable {
     private int currentGeeseCol;
     private int currentFoxRow;
     private int currentFoxCol;
+    private int selItem;
+    private int selRow = 0;
+    private int selCol = 0;
     
     private boolean playAgain;
     
@@ -51,6 +54,7 @@ public class ConnectedClient implements Runnable {
             this.foxPlayer = "";
             this.geesePlayer = "";
             this.playAgain = false;
+            this.selItem = 0;
         } catch (IOException ex) {
             Logger.getLogger(ConnectedClient.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -70,30 +74,6 @@ public class ConnectedClient implements Runnable {
             }
             System.out.println();
         }
-    }
-    
-    public boolean areGeeseWin()
-    {
-        if (currentFoxRow == 1) {
-            return true;
-        }
-
-        int[][] neighborhood = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-        boolean isTrapped = true;
-        for (int[] neighbor : neighborhood) {
-            int newRow = currentFoxRow + neighbor[0];
-            int newCol = currentFoxCol + neighbor[1];
-            if (newRow > 0 && newRow <= 8 && newCol > 0 && newCol <= 8) {
-                if (matrix.get(newRow + "," + newCol) != 1 || matrix.get(newRow + "," + newCol) != -1) {
-                    isTrapped = false;
-                    break;
-                }
-            }
-        }
-        if (isTrapped) 
-            return true;
-        else    
-            return false;
     }
     
     private void updateStatus() {
@@ -218,6 +198,136 @@ public class ConnectedClient implements Runnable {
                             }
                             this.printMatrix();
                         }
+                        //Clicked:row,col
+                        if(line.startsWith("Clicked:")) {
+                            int row = Integer.parseInt(line.split(":")[1].split(",")[0]);
+                            int col = Integer.parseInt(line.split(":")[1].split(",")[1]);
+                            
+                            if(this.myTurn) {
+                                switch(selItem) {
+                                    case 0:
+                                        if(this.iAmFox && row == this.currentFoxRow && col == this.currentFoxCol) {
+                                            this.selRow = row;
+                                            this.selCol = col;
+                                            this.selItem = 1;
+                                            this.pw.println("Selected:fox:" + row + "," + col);
+                                        } 
+                                        else if(this.iAmGeese && matrix.get(row + "," + col) != null && matrix.get(row + "," + col) == 2) {
+                                            if (canGooseMove(row, col)) {
+                                                selRow = row;
+                                                selCol = col;
+                                                selItem = 2;
+                                                this.pw.println("Selected:geese:" + row + "," + col);
+                                            } 
+                                            else {
+                                                this.pw.println("Select other goose");
+                                            }
+                                        }
+                                        break;
+                                    case 1:
+                                        if(AllowedFieldFox(row, col, selRow, selCol)) {
+                                            for(ConnectedClient clnt : this.allClients) {
+                                                if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) {
+                                                    clnt.currentFoxRow = row;
+                                                    clnt.currentFoxCol = col;
+                                                    clnt.matrix.put(row + "," + col, 1);
+                                                    clnt.pw.println("Clicked:fox:" + selRow + "," + selCol + "," + row + "," + col);
+                                                    if( (selRow + selCol) % 2 == 0)
+                                                        clnt.matrix.put(selRow + "," + selCol, 3);
+                                                    else
+                                                        clnt.matrix.put(selRow + "," + selCol, 4);
+                                                }
+                                                if(clnt.username.equals(this.geesePlayer))
+                                                    clnt.myTurn = true;
+                                            }
+                                            this.myTurn = false;
+                                            this.selRow = 0;
+                                            this.selCol = 0;
+                                            selItem = 0;
+                                            if(isFoxWinner()) {
+                                                for(ConnectedClient clnt : this.allClients) {
+                                                if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer))
+                                                    clnt.pw.println("Fox is winner");
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case 2:
+                                        if(AllowedFieldGoose(row, col, this.selRow, selCol)) {
+                                            for(ConnectedClient clnt : this.allClients) {
+                                                if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) {
+                                                    clnt.matrix.put(row + "," + col, 2);
+                                                    clnt.pw.println("Clicked:geese:" + selRow + "," + selCol + "," + row + "," + col);
+                                                    if( (selRow + selCol) % 2 == 0)
+                                                        clnt.matrix.put(selRow + "," + selCol, 3);
+                                                    else
+                                                        clnt.matrix.put(selRow + "," + selCol, 4);
+                                                }
+                                                if(clnt.username.equals(this.foxPlayer))
+                                                    clnt.myTurn = true;
+                                            }
+                                            this.myTurn = false;
+                                            this.selRow = 0;
+                                            this.selCol = 0;
+                                            selItem = 0;
+                                            if(areGeeseWinner()) {
+                                                for(ConnectedClient clnt : this.allClients) {
+                                                if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer))
+                                                    clnt.pw.println("Geese are winners");
+                                                }
+                                            }
+                                        }
+                                        break;
+                                }
+                            } 
+                            else {
+                                this.pw.println("Not your turn");
+                            }
+                        }
+                        if(line.startsWith("Declined restart")) {
+                            for(ConnectedClient clnt : this.allClients) {
+                                if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) {
+                                    clnt.available = true;
+                                    clnt.pw.println("Terminate");
+                                }
+                            }
+                        }
+                        if(line.startsWith("Accepted restart")) {
+                            int i = 0;
+                            this.playAgain = true;
+                            for(ConnectedClient clnt : this.allClients) {
+                                if((clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) && clnt.playAgain)
+                                        i++; 
+                            }
+
+                            if(i == 2) {
+                                for(ConnectedClient clnt : this.allClients) {
+                                    clnt.selItem = 0;
+                                    clnt.selRow = 0;
+                                    clnt.selCol = 0;
+                                    if(clnt.iAmFox) {
+                                        clnt.available = false;
+                                        clnt.iAmFox = false;
+                                        clnt.iAmGeese = true;
+                                        clnt.myTurn = false;
+                                        clnt.playAgain = false;
+                                    }
+                                    else if(clnt.iAmGeese) {
+                                        clnt.available = false;
+                                        clnt.iAmFox = true;
+                                        clnt.iAmGeese = false;
+                                        clnt.myTurn = true;
+                                        clnt.playAgain = false;
+                                    }
+                                }
+
+                                for(ConnectedClient clnt : this.allClients) {
+                                    if(clnt.username.equals(this.foxPlayer) || clnt.username.equals(this.geesePlayer)) 
+                                        clnt.pw.println("Restart");
+                                } 
+                            }
+                        }
+                        
                     } else {
                         System.out.println("Client " + this.username + " is disconnected");
                         for (ConnectedClient cl : this.allClients) {
@@ -241,4 +351,84 @@ public class ConnectedClient implements Runnable {
             }
         }
     }   
+    
+    private boolean canGooseMove (int row, int col) {
+        int newRow = row + 1;       // guska moze ici samo na dole
+        int newCol = 0;
+        int[] lr = {-1, 1};
+        for(int i : lr) {
+            newCol = col + i;
+            if (newRow > 0 && newRow <= 8 && newCol > 0 && newCol <= 8) {
+                if (matrix.get(newRow + "," + newCol) != 1 && matrix.get(newRow + "," + newCol) != 2) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    private boolean AllowedFieldFox (int cRow, int cCol, int sRow, int sCol) {
+        if(cRow == sRow && cCol == sCol) {
+            this.pw.println("Fox is selected");
+            return false;
+        }
+        if(matrix.get(cRow + "," + cCol) == -1) {
+            this.pw.println("Forbidden field because a goose exists");
+            return false;
+        }
+        else if(matrix.get(cRow + "," + cCol) == 1) {
+            this.pw.println("Forbidden field because a goose fox"); 
+            return false;
+        }
+        if((cRow + cCol) % 2 == 0)  {
+            this.pw.println("Movement on dark fields is forbidden");
+            return false;
+        }
+        return (cRow + cCol) % 2 != 0 &&  // da li je polje adekvatne boje
+                Math.abs(cRow - sRow) == 1 &&    
+                Math.abs(cCol - sCol) == 1;      // da li je susedno polje po koloni
+    }
+    
+    private boolean AllowedFieldGoose (int cRow, int cCol, int sRow, int sCol) {
+        if(cRow == sRow && cCol == sCol) {
+            this.pw.println("Goose is selected");
+            return false;
+        }                                                                                                               
+        if(matrix.get(cRow + "," + cCol) == -1) {
+            this.pw.println("Forbidden field because a goose exists");
+            return false;
+        }
+        else if(matrix.get(cRow + "," + cCol) == 1) {
+            this.pw.println("Forbidden field because a goose fox"); 
+            return false;
+        }
+        if((cRow + cCol) % 2 == 0)  {
+            this.pw.println("Movement on dark fields is forbidden");
+            return false;
+        }
+        return (cRow + cCol) % 2 != 0 &&  // da li je polje adekvatne boje
+                cRow == sRow + 1 &&    // da li je prvi donji red
+                Math.abs(cCol - sCol) == 1;      // da li je susedno polje po koloni
+    }
+    
+    public boolean areGeeseWinner() {
+        return currentFoxRow == 1;
+    }
+    
+    public boolean isFoxWinner() {
+        int[][] neighborhood = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+        boolean isTrapped = true;
+        for (int[] neighbor : neighborhood) {
+            int newRow = currentFoxRow + neighbor[0];
+            int newCol = currentFoxCol + neighbor[1];
+            if (newRow > 0 && newRow <= 8 && newCol > 0 && newCol <= 8) {
+                if (matrix.get(newRow + "," + newCol) != 1 || matrix.get(newRow + "," + newCol) != -1) {
+                    isTrapped = false;
+                    break;
+                }
+            }
+        }
+        return isTrapped;
+    }
+    
 }
