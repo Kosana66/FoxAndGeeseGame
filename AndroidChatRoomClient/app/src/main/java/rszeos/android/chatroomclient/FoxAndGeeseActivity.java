@@ -33,6 +33,8 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
         this.tvTurn.setText(turn);
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +45,6 @@ public class FoxAndGeeseActivity extends AppCompatActivity {
         LinearLayout llmain = findViewById(R.id.lvmain);
         tvTurn = findViewById(R.id.tvTurn);
         tvTurn.setText("Fox turn");
-
         Random random = new Random();
         int[] evenColumns = {1, 3, 5, 7};
         int foxCol =  evenColumns[random.nextInt(evenColumns.length)];

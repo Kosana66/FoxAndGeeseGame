@@ -35,40 +35,72 @@ public class ReceiveMessageFromGameServer implements Runnable {
             try {
                 line = this.br.readLine();
                 if(line.startsWith("Not your turn")) {
-                    Toast.makeText(parent, "Not your turn!", Toast.LENGTH_SHORT).show();
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(parent, "Not your turn!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
                 if(line.startsWith("Select other goose")) {
-                    Toast.makeText(parent, "Select other goose!", Toast.LENGTH_SHORT).show();
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(parent, "Select other goose!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
                 if(line.startsWith("Selected:fox:")) {
                     String row = line.split(":")[2].split(",")[0];
-                    String col = line.split(":")[2].split(",")[0];
-                    images.get(row + "," + col).setImageDrawable(null);
-                    images.get(row + "," + col).setImageResource(R.drawable.clicked_fox);
-                    parent.setTvTurn("Geese turn");
+                    String col = line.split(":")[2].split(",")[1];
+
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            images.get(row + "," + col).setImageDrawable(null);
+                            images.get(row + "," + col).setImageResource(R.drawable.clicked_fox);
+                            parent.setTvTurn("Geese turn");
+                        }
+                    });
                 }
                 if(line.startsWith("Clicked:fox:")) {
                     String selRow = line.split(":")[2].split(",")[0];
                     String selCol = line.split(":")[2].split(",")[1];
                     String row = line.split(":")[2].split(",")[2];
                     String col = line.split(":")[2].split(",")[3];
-                    images.get(selRow + "," + selCol).setImageDrawable(null);
-                    images.get(row + "," + col).setImageResource(R.drawable.fox);
-                    parent.setTvTurn("Fox turn");
+
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            images.get(selRow + "," + selCol).setImageDrawable(null);
+                            images.get(row + "," + col).setImageResource(R.drawable.fox);
+                            parent.setTvTurn("Fox turn");
+                        }
+                    });
                 }
                 if(line.startsWith("Selected:geese:")) {
                     String row = line.split(":")[2].split(",")[0];
-                    String col = line.split(":")[2].split(",")[0];
-                    images.get(row + "," + col).setImageDrawable(null);
-                    images.get(row + "," + col).setImageResource(R.drawable.clicked_goose);
+                    String col = line.split(":")[2].split(",")[1];
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            images.get(row + "," + col).setImageDrawable(null);
+                            images.get(row + "," + col).setImageResource(R.drawable.clicked_goose);
+                        }
+                    });
                 }
                 if(line.startsWith("Clicked:geese:")) {
                     String selRow = line.split(":")[2].split(",")[0];
                     String selCol = line.split(":")[2].split(",")[1];
                     String row = line.split(":")[2].split(",")[2];
                     String col = line.split(":")[2].split(",")[3];
-                    images.get(selRow + "," + selCol).setImageDrawable(null);
-                    images.get(row + "," + col).setImageResource(R.drawable.goose);
+                    parent.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            images.get(selRow + "," + selCol).setImageDrawable(null);
+                            images.get(row + "," + col).setImageResource(R.drawable.goose);
+                        }
+                    });
                 }
                 if(line.startsWith("Fox is winner")) {
                     parent.runOnUiThread(() -> {

@@ -15,6 +15,7 @@ public class ReceiveMessageFromServer implements Runnable {
     BufferedReader br;
     private boolean running;
 
+
     public void setRunning(boolean running) {
         this.running = running;
     }
