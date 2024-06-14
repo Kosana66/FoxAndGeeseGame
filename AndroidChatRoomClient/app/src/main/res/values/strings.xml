@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Fox and geese</string>
+
+    <string name="game_name">Fox and geese</string>
+    <string name="username">Username:</string>
+    <string name="IP">IP address:</string>
+    <string name="port">Port:</string>
+    <string name="ok">OK</string>
+    <string name="players">Players:</string>
+    <string name="play">PLAY</string>
+    <string name="turn">Turn</string>
+</resources>
